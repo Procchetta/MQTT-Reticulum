@@ -7,7 +7,7 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 echo "============================================="
-echo " Instalador MQTT-Reticulum Bridge"
+echo " Instalador MQTT-Reticulum Bridge (V2.0)"
 echo "============================================="
 
 # 1. Instalar dependencias del sistema operativo
@@ -26,6 +26,8 @@ fi
 
 source venv/bin/activate
 pip install -r requirements.txt
+
+mkdir -p LOGS
 
 # 3. Menú de Configuración
 echo "============================================="
@@ -46,6 +48,15 @@ TOPIC_PUB_ROOT = msh/2/c
 [RETICULUM]
 REMOTE_DESTINATION_HASH = $remote_hash
 
+[LOGGING]
+# 1 = INFO, 2 = WARNING/ERROR, 3 = DEBUG
+LOG_LEVEL = 1
+
+[AUTOPILOT]
+FILTERING_AUTO = True
+RTT_CONTINGENCY_SEC = 2.5
+PING_INTERVAL_SEC = 30
+
 [FILTERING]
 ALLOW_ROUTING = False
 ALLOW_TELEMETRY = False
@@ -59,6 +70,7 @@ else
     if [ -n "$remote_hash" ]; then
         sed -i "s/REMOTE_DESTINATION_HASH =.*/REMOTE_DESTINATION_HASH = $remote_hash/g" config.ini
     fi
+    echo ">> (El archivo config.ini ya existía. Si te faltan los bloques de AUTOPILOT de la V2, por favor revísalo manualmente)."
 fi
 
 # 4. Crear Servicio Systemd
@@ -67,7 +79,7 @@ SERVICE_FILE="/etc/systemd/system/mqtt-reticulum.service"
 
 cat <<EOF > $SERVICE_FILE
 [Unit]
-Description=MQTT Reticulum Bridge for Meshtastic
+Description=MQTT Reticulum Bridge for Meshtastic (V2.0)
 After=network.target mosquitto.service
 
 [Service]
@@ -90,11 +102,8 @@ systemctl start mqtt-reticulum
 
 echo "============================================="
 echo " Instalación Completada exitosamente."
-echo " Mosquitto y MQTT-Reticulum están corriendo en segundo plano."
-echo " - Para ver los logs del puente y obtener tu HASH LOCAL, ejecuta:"
-echo "     journalctl -u mqtt-reticulum.service -f"
+echo " Los logs detallados se guardarán ahora en $DIR/LOGS/"
 echo ""
-echo " - Para reconfigurar el hash remoto más tarde, edita config.ini y reinicia el servicio:"
-echo "     nano $DIR/config.ini"
-echo "     sudo systemctl restart mqtt-reticulum"
+echo " - Para ver los logs en tiempo real y obtener tu HASH LOCAL, ejecuta:"
+echo "     tail -f $DIR/LOGS/bridge.log"
 echo "============================================="
