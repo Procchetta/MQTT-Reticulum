@@ -25,3 +25,6 @@ dependencies = [
 
 [project.scripts]
 mesh-rns-bridge = "mesh_rns_bridge.main:main"
+
+[tool.setuptools]
+packages = ["mesh_rns_bridge"]

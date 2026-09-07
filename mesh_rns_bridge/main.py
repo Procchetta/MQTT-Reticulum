@@ -16,8 +16,8 @@ class MeshRNSBridge:
     Clase principal que orquesta el MQTT Worker, el RNS Worker y el Filter Engine.
     """
     
-    def __init__(self):
-        self.config = Config()
+    def __init__(self, config_path: str = "/etc/mesh-rns-bridge/config.ini"):
+        self.config = Config(config_path)
         self.config.load()
         self.config.setup_logging()
         
@@ -115,8 +115,10 @@ def main():
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
     
+    config_path = sys.argv[1] if len(sys.argv) > 1 else "/etc/mesh-rns-bridge/config.ini"
+    
     try:
-        bridge = MeshRNSBridge()
+        bridge = MeshRNSBridge(config_path)
         bridge.start()
         
         # Mantener el proceso vivo en el hilo principal

@@ -53,12 +53,14 @@ El único requerimiento para su distribución y uso es **preservar el reconocimi
 
 Para interconectar dos brokers distantes A y B usando Reticulum:
 
-1. **Iniciar el Puente A:** Inicie el servicio en el primer servidor sin configurar `destination_hash`. Observe los logs para encontrar su *Hash Local*:
+1. **Formato JSON:** Asegúrese de que el gateway de Meshtastic (o el nodo que inyecta datos al MQTT) tenga habilitada la salida en formato **JSON** si desea usar las opciones de filtrado granular (Telemetría, Posición, NodeInfo, etc.). De lo contrario, los paquetes binarios cifrados nativos serán ignorados por el puente para ahorrar ancho de banda.
+2. **Hashes Remotos:** Para la prueba de campo, necesitará dos instancias corriendo, y tendrá que cruzar los `destination_hash` en el archivo `config.ini` de cada lado.
+3. **Iniciar el Puente A:** Inicie el servicio en el primer servidor sin configurar `destination_hash`. Observe los logs para encontrar su *Hash Local*:
    ```
    Reticulum Listo. Hash Local (Escuchando): 9abc1234def56789...
    ```
-2. **Iniciar el Puente B:** Inicie el servicio en el segundo servidor de igual manera para obtener su propio *Hash Local* (ej: `1234abcd5678...`).
-3. **Cruzar los Hashes:** 
+4. **Iniciar el Puente B:** Inicie el servicio en el segundo servidor de igual manera para obtener su propio *Hash Local* (ej: `1234abcd5678...`).
+5. **Cruzar los Hashes:** 
    - En el servidor A, edite `/etc/mesh-rns-bridge/config.ini` y establezca `destination_hash = 1234abcd5678...` (el hash del servidor B).
    - En el servidor B, establezca `destination_hash = 9abc1234def56789...` (el hash del servidor A).
-4. **Reiniciar servicios:** Ejecute `sudo systemctl restart mesh-rns-bridge` en ambos extremos. El tráfico ahora fluirá bidireccionalmente según las reglas de filtrado establecidas.
+6. **Reiniciar servicios:** Ejecute `sudo systemctl restart mesh-rns-bridge` en ambos extremos. El tráfico ahora fluirá bidireccionalmente según las reglas de filtrado establecidas.
