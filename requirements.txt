@@ -1,3 +1,0 @@
-rns>=0.5.0
-paho-mqtt<2.0.0
-msgpack>=1.0.0

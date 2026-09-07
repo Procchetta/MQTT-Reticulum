@@ -1,66 +1,64 @@
-# MQTT-Reticulum Bridge para Meshtastic 🌉
+# Mesh-RNS Bridge
 
-**Por Pablo Rocchetta (HP1PAR)**
+**Desarrollo de código abierto para la comunidad CIPRO Panamá.**
 
-Un puente inteligente bidireccional diseñado para conectar "islas" o mallas de **Meshtastic** geográficamente separadas utilizando el enrutamiento de **Reticulum Network Stack (RNS)**. 
+Mesh-RNS Bridge es una solución modular de nivel de producción que permite interconectar brokers de MQTT (típicamente usados con dispositivos Meshtastic) a través del protocolo **Reticulum Network Stack (RNS)**. 
+Permite establecer redes de malla de largo alcance o intercontinentales, filtrando inteligentemente la telemetría y enrutando los mensajes deseados usando bajo ancho de banda.
 
-Este proyecto permite extender redes de Meshtastic a través de enlaces de muy bajo ancho de banda, alta latencia y propensos a pérdidas (como módems LoRa de largo alcance, radios HF o packet radio) donde los enlaces TCP/IP tradicionales y VPNs convencionales fallarían.
+## Licenciamiento y Uso Comunitario
 
-## 🚀 Características Principales
+Este proyecto está bajo licencia **MIT**. Su uso es totalmente libre para fines experimentales, de emergencia y comunitarios. 
 
-- **Transparencia Total**: Los nodos de Meshtastic no notan la diferencia. Simplemente se conectan a un broker MQTT local; el puente captura los paquetes y los inyecta en la malla remota como si estuvieran en la misma habitación.
-- **Firewall Inteligente de Tráfico**: Filtra por defecto la telemetría y las ruidosas tablas de enrutamiento local de Meshtastic (`ROUTING_APP`, `TELEMETRY_APP`), garantizando que por el enlace lento de Reticulum solo viaje la información vital.
-- **Throttling (Límites de Tasa)**: Limita la transmisión de ubicaciones GPS (ej. 1 cada 5 minutos por nodo) y datos de hardware (`NODEINFO_APP`) para conservar el valioso ancho de banda de radiofrecuencia.
-- **Protección Anti-Loops**: Caché criptográfica SHA-256 incorporada que detecta y elimina rebotes y paquetes duplicados, evitando "tormentas de broadcast" entre mallas.
-- **Compresión MsgPack**: Serializa los pesados archivos JSON de Meshtastic a un formato binario altamente comprimido antes de enviarlos por Reticulum.
+El único requerimiento para su distribución y uso es **preservar el reconocimiento y enlace al proyecto original de CIPRO Panamá**, promoviendo así la colaboración abierta y el desarrollo tecnológico solidario.
 
-## 🛠️ Requisitos Previos
+## Características
 
-El instalador automático se encarga de casi todo, pero está diseñado preferentemente para sistemas basados en Debian (Raspberry Pi OS, Ubuntu, Debian):
-- Python 3
-- Servidor Mosquitto (El instalador lo provee automáticamente)
+* **Cero variables hardcodeadas:** Configuración completa mediante `config.ini`.
+* **Motor de Filtrado Inteligente:** Control granular para dejar pasar solo los paquetes deseados (Textos, Telemetría, Posición, NodeInfo) y proteger enlaces de bajo ancho de banda con límites de tasa (rate limiting).
+* **Compresión msgpack:** Conversión binaria de alta eficiencia que reduce drásticamente el tamaño del payload sobre Reticulum.
+* **Resiliencia MQTT:** Conexión y reconexión automática de Paho-MQTT, aislando fallas temporales.
+* **Integración Systemd:** Operación como servicio daemon nativo en entornos Linux.
 
-## 📦 Instalación Rápida (Recomendado)
+## Guía de Instalación Rápida
 
-En la máquina que actuará como puente (Raspberry Pi, Mini PC, etc.), descarga o clona este repositorio y ejecuta el script de instalación:
-
-```bash
-sudo ./install.sh
-```
-
-El script interactivo instalará **Mosquitto**, el entorno de Python, todas las dependencias y creará un servicio `systemd` para que el puente arranque de manera automática.
-
-Durante la instalación se te preguntará por el **Hash Remoto**. Si estás instalando el primer nodo y aún no tienes el hash del segundo, puedes presionar `Enter` para dejarlo en blanco temporalmente.
-
-## ⚙️ Configuración y Enlace
-
-Para que el túnel funcione, el **Nodo A** necesita conocer el Hash de Reticulum del **Nodo B**, y viceversa.
-
-1. Averigua tu **Hash Local** revisando los logs del servicio recién instalado:
+1. **Clonar el repositorio:**
    ```bash
-   journalctl -u mqtt-reticulum.service -f
-   ```
-   *Busca una línea que diga: `Identidad Reticulum Local Hash: <TU_HASH>`*
-
-2. Intercambia los hashes con la otra estación.
-3. Edita el archivo `config.ini` y pega el hash de la otra estación en `REMOTE_DESTINATION_HASH`:
-   ```bash
-   nano config.ini
-   ```
-4. Aplica los cambios reiniciando el servicio:
-   ```bash
-   sudo systemctl restart mqtt-reticulum
+   git clone https://github.com/cipropanama/mesh-rns-bridge.git
+   cd mesh-rns-bridge
    ```
 
-### Ajuste de Filtros (`config.ini`)
-Dentro del archivo de configuración puedes modificar qué pasa y qué no pasa por el puente:
-- `ALLOW_ROUTING`: Por defecto `False`.
-- `ALLOW_TELEMETRY`: Por defecto `False`.
-- `POSITION_RATE_LIMIT_SEC`: Segundos entre envíos de GPS por nodo.
-- `NODEINFO_RATE_LIMIT_SEC`: Segundos entre envíos de nombres de usuario.
+2. **Ejecutar el instalador (como root):**
+   ```bash
+   sudo ./install.sh
+   ```
+   *Esto creará un entorno virtual en `/opt/mesh-rns-bridge`, instalará las dependencias y configurará el servicio en systemd.*
 
-## 🔮 Roadmap (Próximas Versiones)
-- [ ] **Network Awareness (Fallback Inteligente)**: Sistema dinámico capaz de medir la latencia del enlace (RTT) directamente desde la API de Reticulum. Se incorporará un parámetro `FILTERING_AUTO = True|False` junto con umbrales configurables (ej. `RTT_CONTINGENCY_SEC = 2.5`) en el `config.ini`. Si está activo y el RTT está por debajo del umbral, el sistema deshabilitará los filtros temporalmente. Si el RTT supera el límite (ej. el tráfico pasa a radios LoRa/HF de respaldo), el puente aplicará el bloqueo estricto automáticamente.
+3. **Editar la configuración:**
+   Abra `/etc/mesh-rns-bridge/config.ini` con su editor favorito y ajuste los parámetros (MQTT host, tópicos, opciones de filtrado, etc.).
+   ```bash
+   sudo nano /etc/mesh-rns-bridge/config.ini
+   ```
 
----
-*Desarrollado para comunicaciones resilientes y operaciones de emergencia (EmComm).*
+4. **Levantar el servicio:**
+   ```bash
+   sudo systemctl start mesh-rns-bridge
+   ```
+
+   Puede verificar los logs en tiempo real con:
+   ```bash
+   sudo journalctl -u mesh-rns-bridge -f
+   ```
+
+## Configuración de Nodos Distantes (Destination Hash)
+
+Para interconectar dos brokers distantes A y B usando Reticulum:
+
+1. **Iniciar el Puente A:** Inicie el servicio en el primer servidor sin configurar `destination_hash`. Observe los logs para encontrar su *Hash Local*:
+   ```
+   Reticulum Listo. Hash Local (Escuchando): 9abc1234def56789...
+   ```
+2. **Iniciar el Puente B:** Inicie el servicio en el segundo servidor de igual manera para obtener su propio *Hash Local* (ej: `1234abcd5678...`).
+3. **Cruzar los Hashes:** 
+   - En el servidor A, edite `/etc/mesh-rns-bridge/config.ini` y establezca `destination_hash = 1234abcd5678...` (el hash del servidor B).
+   - En el servidor B, establezca `destination_hash = 9abc1234def56789...` (el hash del servidor A).
+4. **Reiniciar servicios:** Ejecute `sudo systemctl restart mesh-rns-bridge` en ambos extremos. El tráfico ahora fluirá bidireccionalmente según las reglas de filtrado establecidas.

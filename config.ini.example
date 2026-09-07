@@ -1,0 +1,54 @@
+[mqtt]
+# Configuración del Broker MQTT Local (usualmente conectado a Meshtastic)
+host = localhost
+port = 1883
+user = 
+password = 
+client_id = mesh-rns-bridge
+# Tópico a suscribirse para recibir mensajes entrantes de MQTT
+topic_sub = msh/2/c/#
+# Tópico donde el bridge publicará mensajes recibidos de Reticulum
+topic_pub = msh/2/c/Bridge
+keepalive = 60
+
+[reticulum]
+# Ruta a las identidades de Reticulum. (Dejar por defecto usualmente funciona)
+identity_path = ~/.reticulum/identities/bridge
+storage_path = ~/.reticulum
+# Hash Hexadecimal del nodo puente remoto.
+# Si se deja en blanco, el puente operará en modo solo escucha.
+destination_hash = 
+# Nombre del aspecto de Reticulum para este puente
+aspect = bridge
+# Modo de envío: 'packet' (datagramas simples) o 'link' (conexiones orientadas, confiables).
+# Packet tiene menor overhead. Link garantiza entrega si la red es inestable.
+send_mode = packet
+# Tiempo máximo para esperar establecer un link antes de fallar temporalmente.
+link_timeout = 15
+
+[filter]
+# Configuración de reenvío: Qué tipos de paquetes de Meshtastic se enviarán por Reticulum.
+forward_text = True
+forward_telemetry = False
+forward_position = False
+forward_nodeinfo = True
+
+# Control de Tasa (Rate Limiting) en segundos.
+# Evita inundar la red RNS con posiciones o telemetría redundante del mismo nodo.
+min_position_interval_sec = 300
+min_telemetry_interval_sec = 300
+
+[batching]
+# Agrupar mensajes en ráfagas. Útil si se esperan múltiples paquetes muy rápido.
+enabled = False
+# Tiempo máximo de espera para agrupar paquetes (segundos).
+window_seconds = 1.5
+# Cantidad máxima de paquetes a retener antes de forzar el envío.
+max_buffered_packets = 10
+
+[logging]
+# Nivel de log (DEBUG, INFO, WARNING, ERROR)
+level = INFO
+# Guardar logs en un archivo físico
+log_to_file = True
+log_path = /var/log/mesh-rns-bridge/bridge.log

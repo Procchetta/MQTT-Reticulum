@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mesh-rns-bridge"
+version = "2.0.0"
+description = "A modular bridge between MQTT and Reticulum Network Stack (RNS) for mesh networks."
+readme = "README.md"
+authors = [
+    { name = "Comunidad CIPRO Panamá", email = "info@cipropanama.org" }
+]
+license = { file = "LICENSE" }
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+]
+dependencies = [
+    "paho-mqtt>=1.6.1,<2.0.0",
+    "rns>=0.5.0",
+    "msgpack>=1.0.0"
+]
+
+[project.scripts]
+mesh-rns-bridge = "mesh_rns_bridge.main:main"

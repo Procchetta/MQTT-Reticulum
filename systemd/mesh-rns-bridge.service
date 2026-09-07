@@ -1,0 +1,14 @@
+[Unit]
+Description=Mesh-RNS Bridge Service
+After=network.target mosquitto.service
+
+[Service]
+Type=simple
+User=root
+# Adjust python path to where the virtual environment is installed
+ExecStart=/opt/mesh-rns-bridge/bin/python /opt/mesh-rns-bridge/bin/mesh-rns-bridge
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
